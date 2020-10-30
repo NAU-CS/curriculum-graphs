@@ -1,0 +1,9 @@
+** TODOs
+
+create dep graph.
+
+** 30 Oct 2020
+
+[[file:download.course.R]] first script for one course.
+
+[[file:download.reqs.R]] main script, works for all 7 programs.

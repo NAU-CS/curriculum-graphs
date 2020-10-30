@@ -1,0 +1,85 @@
+
+
+- 1
+- 105: [[http://catalog.nau.edu/Courses/course?courseId=012995][Computing Tools I]]
+- 110
+- 100
+- 126
+- 136
+- 200
+- 212
+- 249
+
+BS Computer Engineering
+Major Requirements
+
+    This major requires 103 to 104 units distributed as follows:
+        Mathematics and Science Requirements (31-32 units)
+        Professional Requirements: 72 units
+
+
+    Take the following 103 - 104 units:
+        CENE 225 or STA 275 (3 units)
+        CHM 151 or BIO 181 or AST 180 or (GLG 101 and GLG 103) (3-4 units) 
+        MAT 136, MAT 137, MAT 238, MAT 226, MAT 239 (18 units) 
+        PHY 161, PHY 262 (7 units)
+
+    Professional Requirements (72 units)
+        CS 105, CS 126, CS 126L, CS 136, CS 136L, CS 205, CS 249, CS 305,  (14 units)
+        EE 110, EE 188, EE 188L, EE 215, EE 280, EE 286, EE 310, EE 325, EE 348, EE 364, EE 380 (38 units)
+        EGR 333W which meets the junior-level writing requirement (3 units)
+        (EE 476C and EE 486C) which meets the senior capstone requirement (5 units)
+        Additional units from any 300-level or 400-level EE or CS course (6 units)
+        Additional units from any 400 or 500-level EE courses (6 units)
+
+
+
+
+BS Applied CS
+This major requires 84 units distributed as follows:
+
+    Preprofessional Requirements: 19 units
+    Applied Computer Science Common Courses: 65 units
+     
+
+Take the following 84 units:
+Complete each ACS course and CS 486C with a Grade of "C" or better.
+
+Preprofessional Requirements (19 units)
+
+    MAT 136, MAT 226 (7 units)
+    (CENE 225, STA 270 or STA 275) (3 units)
+    Technical electives at the 200-level or above, from science and engineering disciplines: AST, BIO, CENE (excluding CENE 225), CHM, CS, EE, GLG, GSP, INF, MAT, ME, PHY and STA (excluding STA 270 or STA 275) (9 units).
+
+
+Major Courses (65 units)
+
+    Core Courses:
+        CS 105, CS 112, CS 122, CS 122L, CS 126, CS 126L, CS 136, CS 136L, CS 200, CS 205, CS 212, CS 249, CS 305, CS 345, CS 386, CS 476, CS 480 (37 units)  
+        EE 222 (3 units)
+        INF 110 (3 units)
+    EGR 333W which meets the junior-level writing requirement (3 units)
+    CS 486C which meets the senior capstone requirement (4 units)
+    CS electives at the 300-level or above. (15 units)
+
+
+
+
+BS CS
+    Preprofessional Requirements (at least 33 units)
+        Basic Science courses, select one of the following blocks (7-8 units):
+
+            BIO 181, BIO 181L, BIO 182, BIO 182L (8 units)
+            CHM 151, CHM 151L, CHM 152 (8 units)
+            PHY 161, PHY 262 (7 units)
+
+        CENE 225, STA 270, or STA 275 (3 units)
+        MAT 136, MAT 137, MAT 226, (MAT 316 or MAT 362) (14 units)
+
+        Technical electives at the 200-level or above, from science and engineering disciplines:  AST, BIO, GLG, GSP, INF, CENE (excluding CENE 225), CHM, CS, EE, MAT, ME, STA (excluding STA 270 or STA 275), and PHY. (9 units).  You may petition the department chair for approval of courses with other prefixes.
+
+    Professional Requirements (62 units)
+        Core Courses: CS 105, CS 126, CS 126L, CS 136, CS 136L, CS 200, CS 205, CS 212, CS 249, CS 305, CS 315, CS 386, CS 396, CS 421, CS 476, CS 480 (37 units)
+        CS 486C which meets the senior capstone requirement (4 units)
+        CS electives at the 300-level or above (18 units)
+        EGR 333W which meets the junior-level writing requirement (3 units)
