@@ -1,4 +1,5 @@
 library(data.table)
+catalogYear <- 2021
 today.dir <- file.path("bs", format(Sys.time(), "%Y-%m-%d"))
 siccs.html <- file.path(today.dir, "siccs.html")
 if(!file.exists(siccs.html)){
@@ -8,11 +9,11 @@ if(!file.exists(siccs.html)){
     siccs.html)
 }
 
-bs.dt <- nc::capture_all_str(
+bs.dt <- suppressWarnings(nc::capture_all_str(
   siccs.html,
   nc::field("href", '="', '[^"]+'),
   '">',
-  nc::field("B.S.", " ", "[^<]+"))
+  nc::field("B.S.", " ", "[^<]+")))
 
 subject.catNbr.pattern <- list(
   subject="[A-Z]+",
@@ -31,14 +32,14 @@ for(bs.i in 1:nrow(bs.dt)){
     if(!file.exists(program.html)){
       download.file(bs[["href"]], program.html)
     }
-    plan.dt <- nc::capture_all_str(
+    plan.dt <- suppressWarnings(nc::capture_all_str(
       program.html,
-      nc::field("plan", "=", '[A-Z]+'))
+      nc::field("plan", "=", '[A-Z]+')))
     if(nrow(plan.dt)==0){
-      plan.dt <- nc::capture_all_str(
+      plan.dt <- suppressWarnings(nc::capture_all_str(
         program.html,
         "nau-catalog ",
-        plan='[^"]+')
+        plan='[^"]+'))
     }
     u <- paste0(
       "https://catalog.nau.edu/Catalog/details?plan=",
@@ -47,13 +48,6 @@ for(bs.i in 1:nrow(bs.dt)){
   }
   course.dt <- suppressWarnings(nc::capture_all_str(
     details.html,
-    '<a',
-    '.*?',
-    nc::field(
-      "href", '="', '.*?',
-      nc::field("catalogYear", "=", "[0-9]+")
-    ),
-    ".*?",
     ">",
     subject="[A-Z]+",
     " ",
@@ -77,7 +71,7 @@ while(nrow({
     cat(sprintf("%4d / %4d courses\n", course.i, nrow(todo.courses)))
     course.row <- todo.courses[course.i]
     course.dir <- course.row[, file.path(
-      "years", course.dt[1, catalogYear], subject, catNbr)]
+      "years", catalogYear, subject, catNbr)]
     dir.create(course.dir, showWarnings = FALSE, recursive = TRUE)
     match.html <- file.path(course.dir, "match.html")
     if(!file.exists(match.html)){
@@ -143,12 +137,12 @@ req.courses <- do.call(rbind, req.courses.list)
 names(remove.courses.list)
 
 graph.list <- list(
-  degree_courses=degree.courses[, .(
-    degree, course=paste(subject, catNbr))],
-  requirements=req.courses[
-    ! is.na(requires) |
+  degree_courses=unique(degree.courses[, .(
+    degree, course=paste(subject, catNbr))]),
+  requirements=unique(req.courses[
+    ! (is.na(requires) |
       course %in% names(remove.courses.list) |
-        requires %in% names(remove.courses.list)])
+        requires %in% names(remove.courses.list))]))
 dir.create("download.graph", showWarnings = FALSE, recursive = TRUE)
 for(data.name in names(graph.list)){
   dt <- graph.list[[data.name]]

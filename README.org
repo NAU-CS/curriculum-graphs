@@ -2,6 +2,28 @@
 
 ** 30 Oct 2020
 
+[[file:figure-bipartite.R]] makes
+
+[[file:figure-bipartite/Applied Computer Science.png]]
+[[file:figure-bipartite/Computer Engineering.png]]
+[[file:figure-bipartite/Computer Science.png]]
+[[file:figure-bipartite/Cybersecurity.png]]
+[[file:figure-bipartite/Electrical Engineering.png]]
+[[file:figure-bipartite/Electrical Engineering Technology.png]]
+[[file:figure-bipartite/Informatics.png]]
+
+
+[[file:figure-degree.R]] makes
+
+[[file:figure-degree/Applied Computer Science.png]]
+[[file:figure-degree/Computer Science.png]]
+[[file:figure-degree/Electrical Engineering Technology.png]]
+[[file:figure-degree/Cybersecurity.png]]
+[[file:figure-degree/Electrical Engineering.png]]
+[[file:figure-degree/Computer Engineering.png]]
+[[file:figure-degree/Informatics.png]]
+
+
 [[file:download.graph.R]] creates [[file:download.graph/degree_courses.csv]]
 and [[file:download.graph/requirements.csv]]
 
