@@ -21,29 +21,30 @@ subject.catNbr.pattern <- list(
   catNbr="[0-9]+[A-Z]?")
 Courses.prefix <- "https://catalog.nau.edu/Courses/"
 degree.courses.list <- list()
+program.dt.list <- list()
 for(bs.i in 1:nrow(bs.dt)){
   bs <- bs.dt[bs.i]
   degree <- bs[["B.S."]]
   bs.dir <- file.path(today.dir, degree)
   details.html <- file.path(bs.dir, "details.html")
-  if(!file.exists(details.html)){
-    dir.create(bs.dir, showWarnings = FALSE, recursive = TRUE)
-    program.html <- file.path(bs.dir, "program.html")
-    if(!file.exists(program.html)){
-      download.file(bs[["href"]], program.html)
-    }
+  dir.create(bs.dir, showWarnings = FALSE, recursive = TRUE)
+  program.html <- file.path(bs.dir, "program.html")
+  if(!file.exists(program.html)){
+    download.file(bs[["href"]], program.html)
+  }
+  plan.dt <- suppressWarnings(nc::capture_all_str(
+    program.html,
+    nc::field("plan", "=", '[A-Z]+')))
+  if(nrow(plan.dt)==0){
     plan.dt <- suppressWarnings(nc::capture_all_str(
       program.html,
-      nc::field("plan", "=", '[A-Z]+')))
-    if(nrow(plan.dt)==0){
-      plan.dt <- suppressWarnings(nc::capture_all_str(
-        program.html,
-        "nau-catalog ",
-        plan='[^"]+'))
-    }
-    u <- paste0(
-      "https://catalog.nau.edu/Catalog/details?plan=",
-      plan.dt[1, plan])
+      "nau-catalog ",
+      plan='[^"]+'))
+  }
+  u <- paste0(
+    "https://catalog.nau.edu/Catalog/details?plan=",
+    plan.dt[1, plan])
+  if(!file.exists(details.html)){
     download.file(u, details.html)
   }
   course.dt <- suppressWarnings(nc::capture_all_str(
@@ -53,8 +54,12 @@ for(bs.i in 1:nrow(bs.dt)){
     " ",
     catNbr="[0-9]+",
     "</a>"))
-  degree.courses.list[[bs.i]] <- course.dt[, data.table(degree, subject, catNbr)]
+  program.dt.list[[bs.i]] <- data.table(
+    degree, href=u)
+  degree.courses.list[[bs.i]] <- course.dt[, data.table(
+    degree, subject, catNbr)]
 }
+program.dt <- do.call(rbind, program.dt.list)
 degree.courses <- do.call(rbind, degree.courses.list)
 
 all.courses <- unique(degree.courses[, .(subject, catNbr)])
@@ -137,6 +142,7 @@ req.courses <- do.call(rbind, req.courses.list)
 names(remove.courses.list)
 
 graph.list <- list(
+  programs=program.dt,
   degree_courses=unique(degree.courses[, .(
     degree, course=paste(subject, catNbr))]),
   requirements=unique(req.courses[

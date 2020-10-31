@@ -2,6 +2,8 @@
 
 ** 30 Oct 2020
 
+[[file:figure-common.R]] makes [[http://jan.ucc.nau.edu/~th798/retention]]/
+
 [[file:figure-bipartite.R]] makes
 
 [[file:figure-bipartite/Applied Computer Science.png]]
