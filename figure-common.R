@@ -4,7 +4,7 @@ for(data.name in dir("download.graph")){
   f <- file.path("download.graph", data.name)
   data.list[[data.name]] <- data.table::fread(f)
 }
-
+options(warn=1)
 getDT <- function(x){
   dt <- nc::capture_first_vec(
     x, 
@@ -47,7 +47,7 @@ for(pair.i in 1:nrow(pairs.dt)){
     deg.names <- data.list$deg[select.dt, course, on=names(select.dt)]
     deg.dt <- getDT(deg.names)
     node.dt <- deg.dt[year <= pair.row$year]
-    node.names <- node.dt[, paste(subject, number)]
+    node.names <- node.dt[, paste0(subject, " ", number, suffix)]
     n.common <- length(intersect(common, node.names))
     degree.reqs <- degree.list[[degree]][
       node.names, on="course"][requires %in% node.names]
@@ -82,6 +82,7 @@ for(pair.i in 1:nrow(pairs.dt)){
 common.dt <- do.call(rbind, common.dt.list)
 
 all.majors.dt.list <- list()
+all.majors.years.list <- list()
 for(previous.major in names(degree.list)){
   previous.dt <- common.dt[
     i.name==previous.major | j.name==previous.major][order(year, -n.common)]
@@ -89,6 +90,7 @@ for(previous.major in names(degree.list)){
   major.dt <- data.table(previous.major)
   for(y in year.vec){
     year.dt <- previous.dt[J(y), on="year"]
+    all.majors.years.list[[paste(previous.major, y)]] <- year.dt
     pre.xt <- year.dt[, .(
       new.major=sprintf(
         '<a href="%s">%s</a>',
@@ -119,29 +121,12 @@ all.majors.html <- print(
   type="html",
   sanitize.text.function=identity,
   file="/dev/null")
-cat('<title>NAU SICCS Programs</title>
-<p>This web page shows how much overlap there is between
-classes which are required by each SICCS undergraduate major.
-It is meant to help students find out how much work it would
-be to switch majors. Suggested use:</p>
-<ul>
-<li>Find the row that corresponds to your current/previous major
-  by looking in the first column of the table below.</li>
-<li>Look for the column that corresponds to how many years
-  you have completed in your current/previous major.</li>
-<li>Inside that box the other SICCS majors are ranked by
-  the number of required classes that you have already completed.</li>
-<li>Click the new major to see its requirements in the course catalog.</li>
-<li>Click the number of classes in common to see a pre-requisite graph
-  which compares the two majors.</li>
-</ul>
-<p>For example, say your current/previous major is Computer Science (row 3),
-and you have completed two years of classes (year 2 column).
-Then you can see that there are 13 classes that you have already completed
-which are also requirements which could be used if you wanted to switch to
-(1) Computer Engineering or (2) Informatics.
-Applied Computer Science would also be a reasonable choice
-(12 classes in common).</p>
-<p><a href="https://github.com/NAU-CS/curriculum-graphs#30-oct-2020">Source
-code</a> by <a href="http://tdhock.github.io/">Toby Dylan Hocking</a>.</p>
-', all.majors.html, file=file.path("figure-common", "index.html"))
+header.html.tmp <- readLines("figure-common-header.html")
+ex.major <- "Computer Science"
+ex.year <- 2
+CS2 <- all.majors.years.list[[paste(ex.major, ex.year)]]
+major.text <- CS2[1, sprintf('For example, say your current/previous major is %s (row %d), and you have completed %d years of classes (year %d column).', ex.major, which(names(degree.list)==ex.major), ex.year, ex.year)]
+first <- CS2[1, sprintf('Then you can see that there are %d classes that you have already completed which are also requirements which could be used if you wanted to switch to %s.', n.common, new.name)]
+second <- CS2[2, sprintf('%s would also be a reasonable choice (%d classes in common).', new.name, n.common)]
+header.html <- sprintf(header.html.tmp, paste(major.text, first, second))
+cat(header.html, all.majors.html, file=file.path("figure-common", "index.html"))

@@ -19,6 +19,10 @@ subject.catNbr.pattern <- list(
   subject="[A-Z]+",
   " ",
   catNbr="[0-9]+[A-Z]?")
+course.pattern <- list(
+  ">",
+  subject.catNbr.pattern,
+  "</a>")
 Courses.prefix <- "https://catalog.nau.edu/Courses/"
 degree.courses.list <- list()
 program.dt.list <- list()
@@ -47,20 +51,42 @@ for(bs.i in 1:nrow(bs.dt)){
   if(!file.exists(details.html)){
     download.file(u, details.html)
   }
-  course.dt <- suppressWarnings(nc::capture_all_str(
-    details.html,
-    ">",
-    subject="[A-Z]+",
-    " ",
-    catNbr="[0-9]+",
-    "</a>"))
+  exclude.dt <- suppressWarnings({
+    nc::capture_all_str(
+      details.html,
+      "\\(",
+      nc::field("excluding", " ", ".*?</a>"),
+      "\\)")
+  })
+  subjects.list <- list(
+    excluding=if(nrow(exclude.dt))exclude.dt[["excluding"]] else "",
+    all=details.html)
+  match.list <- list()
+  for(subject.name in names(subjects.list)){
+    match.list[[subject.name]] <- suppressWarnings({
+      nc::capture_all_str(subjects.list[[subject.name]], course.pattern)
+    })
+  }
+  ## Exclude courses mentioned via (excluding...) or ending with L
+  ## (avoid clutter).
+  with(match.list, all[excluding, exclude := TRUE, on=names(all)])
+  match.list$all[grepl("L$", catNbr), exclude := TRUE]
   program.dt.list[[bs.i]] <- data.table(
     degree, href=u)
-  degree.courses.list[[bs.i]] <- course.dt[, data.table(
+  degree.courses.list[[bs.i]] <- match.list$all[is.na(exclude), data.table(
     degree, subject, catNbr)]
 }
 program.dt <- do.call(rbind, program.dt.list)
 degree.courses <- do.call(rbind, degree.courses.list)
+
+## tests
+CS <- degree.courses["Computer Science", paste(subject, catNbr), on="degree"]
+stopifnot("CS 249" %in% CS)
+stopifnot(!c("STA 270", "STA 275", "CENE 225", "CS 136L") %in% CS)
+ACS <- degree.courses[
+  "Applied Computer Science", paste(subject, catNbr), on="degree"]
+stopifnot("CS 249" %in% ACS)
+stopifnot(!c("STA 270", "STA 275", "CENE 225") %in% ACS)
 
 all.courses <- unique(degree.courses[, .(subject, catNbr)])
 req.courses.list <- list()

@@ -1,9 +1,6 @@
 degree,course
 Applied Computer Science,MAT 226
 Applied Computer Science,MAT 136
-Applied Computer Science,CENE 225
-Applied Computer Science,STA 270
-Applied Computer Science,STA 275
 Applied Computer Science,CS 105
 Applied Computer Science,CS 112
 Applied Computer Science,CS 122
@@ -20,6 +17,8 @@ Applied Computer Science,CS 476
 Applied Computer Science,CS 480
 Applied Computer Science,EE 222
 Applied Computer Science,INF 110
+Applied Computer Science,EGR 333W
+Applied Computer Science,CS 486C
 Applied Computer Science,CS 485
 Applied Computer Science,CS 497
 Computer Science,MAT 316
@@ -29,9 +28,6 @@ Computer Science,CHM 151
 Computer Science,CHM 152
 Computer Science,PHY 161
 Computer Science,PHY 262
-Computer Science,CENE 225
-Computer Science,STA 270
-Computer Science,STA 275
 Computer Science,MAT 136
 Computer Science,MAT 137
 Computer Science,MAT 226
@@ -50,6 +46,8 @@ Computer Science,CS 396
 Computer Science,CS 421
 Computer Science,CS 476
 Computer Science,CS 480
+Computer Science,CS 486C
+Computer Science,EGR 333W
 Computer Science,CS 485
 Computer Science,CS 497
 Electrical Engineering Technology,MAT 121
@@ -59,6 +57,8 @@ Electrical Engineering Technology,EET 320
 Electrical Engineering Technology,EET 330
 Electrical Engineering Technology,EET 340
 Electrical Engineering Technology,EET 426
+Electrical Engineering Technology,EET 486C
+Electrical Engineering Technology,EGR 333W
 Electrical Engineering Technology,STA 270
 Cybersecurity,MAT 226
 Cybersecurity,BBA 303
@@ -88,6 +88,8 @@ Cybersecurity,CYB 402
 Cybersecurity,CYB 404
 Cybersecurity,CYB 410
 Cybersecurity,CYB 412
+Cybersecurity,EGR 333W
+Cybersecurity,CYB 486C
 Cybersecurity,CS 480
 Cybersecurity,CCJ 340
 Cybersecurity,CCJ 385
@@ -123,6 +125,9 @@ Electrical Engineering,EE 348
 Electrical Engineering,EE 364
 Electrical Engineering,EE 380
 Electrical Engineering,EGR 186
+Electrical Engineering,EGR 333W
+Electrical Engineering,EE 476C
+Electrical Engineering,EE 486C
 Electrical Engineering,EE 485
 Electrical Engineering,EE 497
 Electrical Engineering,BIO 100
@@ -162,6 +167,8 @@ Computer Engineering,EE 325
 Computer Engineering,EE 348
 Computer Engineering,EE 364
 Computer Engineering,EE 380
+Computer Engineering,EE 476C
+Computer Engineering,EE 486C
 Computer Engineering,EE 485
 Computer Engineering,EE 497
 Informatics,MAT 226
@@ -186,8 +193,11 @@ Informatics,CS 345
 Informatics,CS 386
 Informatics,CS 480
 Informatics,EE 222
+Informatics,ENG 302W
 Informatics,INF 376
 Informatics,INF 386
+Informatics,INF 476C
+Informatics,INF 486C
 Informatics,STA 275
 Informatics,STA 371
 Informatics,AST 280
@@ -200,7 +210,9 @@ Informatics,PHY 263
 Informatics,BIO 240
 Informatics,BIO 344
 Informatics,BIO 450
+Informatics,BIO 482C
 Informatics,BIO 226
 Informatics,BIO 441
+Informatics,BIO 471C
 Informatics,BIO 479
 Informatics,FOR 213
