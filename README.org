@@ -1,5 +1,9 @@
 ** TODOs
 
+** 5 Nov 2020
+
+[[file:figure-common.R]] updated to create major-specific web pages.
+
 ** 30 Oct 2020
 
 [[file:figure-common.R]] makes [[http://jan.ucc.nau.edu/~th798/retention]]/

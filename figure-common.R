@@ -21,13 +21,16 @@ i.vec <- seq_along(degree.list)
 year.vec <- 1:4
 pairs.dt <- data.table(expand.grid(i=i.vec, j=i.vec, year=year.vec))[i<j]
 common.dt.list <- list()
+classes.dt.list <- list()
 make.pair <- function(x)paste(sort(x), collapse="-")
 for(pair.i in 1:nrow(pairs.dt)){
   pair.row <- pairs.dt[pair.i]
   pair.unsort <- pair.row[, names(degree.list)[c(i, j)] ]
   pair.name <- make.pair(pair.unsort)
+  cat(sprintf("%4d / %4d pairs %s\n", pair.i, nrow(pairs.dt), pair.name))
   f <- function(x)unique(degree.list[[x]]$course)
   common <- pair.row[, intersect(f(i), f(j)) ]
+  n.common <- length(common)
   some.colors <- c(#dput(RColorBrewer::brewer.pal(Inf, "Set3"))
     "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", 
     "#B3DE69", "#FCCDE5", "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
@@ -48,7 +51,6 @@ for(pair.i in 1:nrow(pairs.dt)){
     deg.dt <- getDT(deg.names)
     node.dt <- deg.dt[year <= pair.row$year]
     node.names <- node.dt[, paste0(subject, " ", number, suffix)]
-    n.common <- length(intersect(common, node.names))
     degree.reqs <- degree.list[[degree]][
       node.names, on="course"][requires %in% node.names]
     ft <- unique(degree.reqs[, cbind(requires, course)])
@@ -72,14 +74,20 @@ for(pair.i in 1:nrow(pairs.dt)){
         degree, pair.row$year, n.common))
   }
   dev.off()
-  common.dt.list[[pair.i]] <- data.table(
+  meta.dt <- data.table(
     year=pair.row$year,
     pair.name,
     i.name=pair.unsort[[1]],
-    j.name=pair.unsort[[2]],
-    n.common)
+    j.name=pair.unsort[[2]])    
+  if(length(common)){
+    classes.dt.list[[pair.i]] <- data.table(
+      meta.dt, course=common)
+  }
+  common.dt.list[[pair.i]] <- data.table(
+    meta.dt, n.common)
 }
 common.dt <- do.call(rbind, common.dt.list)
+classes.dt <- do.call(rbind, classes.dt.list)
 
 all.majors.dt.list <- list()
 all.majors.years.list <- list()
@@ -128,5 +136,64 @@ CS2 <- all.majors.years.list[[paste(ex.major, ex.year)]]
 major.text <- CS2[1, sprintf('For example, say your current/previous major is %s (row %d), and you have completed %d years of classes (year %d column).', ex.major, which(names(degree.list)==ex.major), ex.year, ex.year)]
 first <- CS2[1, sprintf('Then you can see that there are %d classes that you have already completed which are also requirements which could be used if you wanted to switch to %s.', n.common, new.name)]
 second <- CS2[2, sprintf('%s would also be a reasonable choice (%d classes in common).', new.name, n.common)]
-header.html <- sprintf(header.html.tmp, paste(major.text, first, second))
+major.lis <- paste(
+  sprintf(
+    '<li><a href="%s.html">%s</a></li>',
+    gsub(" ", "_", names(degree.list)),
+    names(degree.list)),
+  collapse="\n")
+header.html <- sprintf(
+  paste(header.html.tmp, collapse="\n"),
+  major.lis,
+  paste(major.text, first, second))
 cat(header.html, all.majors.html, file=file.path("figure-common", "index.html"))
+
+## new major-specific pages.
+for(previous.major in names(degree.list)){
+  getMajor <- function(DT){
+    out <- DT[
+      i.name==previous.major | j.name==previous.major]
+    out[, new.name := ifelse(i.name==previous.major, j.name, i.name)]
+    out[year==4]
+  }
+  prev.counts <- getMajor(common.dt)[order(-n.common)]
+  previous.dt <- getMajor(classes.dt)
+  prev.info <- getDT(previous.dt[["course"]])
+  previous.dt$course.year <- prev.info$year
+  year.vec <- 1:4
+  year.out <- data.table(year=year.vec)
+  for(other.major in prev.counts[["new.name"]]){
+    other.courses <- previous.dt[
+      new.name==other.major][order(course.year, course)]
+    course.html <- other.courses[
+      year.out[,.(year)],
+      .(html=if(.N==0)"" else paste(paste("<br />", course), collapse="\n")),
+      by=.EACHI,
+      on=.(course.year=year)][["html"]]
+    maybe.spaces <- make.pair(c(other.major, previous.major))
+    no.spaces <- gsub(" ", "_", maybe.spaces)
+    png.path <- sprintf(
+      'pairs/%s/%d.png',
+      no.spaces,
+      year.vec)
+    img.html <- sprintf(
+      '<a href="%s"><img src="%s" width="100"></a>',
+      png.path, png.path)
+    year.out[[other.major]] <- paste0(img.html, course.html)
+  }
+  xt <- xtable::xtable(year.out)
+  old.align <- xtable::align(xt)
+  xtable::align(xt) <- rep("r", length(old.align))
+  major.html <- print(
+    xt,
+    include.rownames=FALSE,
+    type="html",
+    sanitize.text.function=identity,
+    file="/dev/null")
+  major.under <- gsub(" ", "_", previous.major)
+  major.under.html <- paste0(major.under, ".html")
+  cat(
+    gsub("<td", '<td valign="top"', major.html), 
+    file=file.path("figure-common", major.under.html))
+}
+
