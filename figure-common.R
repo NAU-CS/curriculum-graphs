@@ -2,8 +2,11 @@ library(data.table)
 data.list <- list()
 for(data.name in dir("download.graph")){
   f <- file.path("download.graph", data.name)
-  data.list[[data.name]] <- data.table::fread(f)
+  data.list[[data.name]] <- data.table::fread(
+    f, colClasses=list(character="courseId"))
 }
+setkey(data.list$courseIds, name)
+setkey(data.list$programs, degree)
 options(warn=1)
 getDT <- function(x){
   dt <- nc::capture_first_vec(
@@ -13,6 +16,15 @@ getDT <- function(x){
     suffix=".*")
   dt[, year := floor(number/100)]
   dt
+}
+majorURL <- function(major){
+  ahref(major, paste0("https://catalog.nau.edu/Catalog/details?plan=", data.list$programs[major, plan]))
+}
+courseURL <- function(name){
+  ahref(name, paste0("https://catalog.nau.edu/Courses/course?courseId=", data.list$courseIds[name, courseId]))
+}
+ahref <- function(content, u){
+  sprintf('<a href="%s">%s</a>', u, content)
 }
 
 all.reqs <- data.list$req[data.list$deg, on="course", nomatch=0L]
@@ -69,10 +81,10 @@ for(pair.i in 1:nrow(pairs.dt)){
     degree.png <- file.path("figure-common", paste0(degree, ".png"))
     Rgraphviz::plot(
       g, attrs = att, nodeAttrs=nA, subGList = sgL,
-      main=sprintf(
-        "%s year %d, n.common=%d",
-        degree, pair.row$year, n.common))
+      main=degree)
   }
+  par(mfrow=c(1,1))
+  title(sub="Each node is a major requirement; each edge points from a required class to a class that requires it; colored nodes are common to both majors; white nodes are not required by the other major.", line=-1)
   dev.off()
   meta.dt <- data.table(
     year=pair.row$year,
@@ -100,10 +112,7 @@ for(previous.major in names(degree.list)){
     year.dt <- previous.dt[J(y), on="year"]
     all.majors.years.list[[paste(previous.major, y)]] <- year.dt
     pre.xt <- year.dt[, .(
-      new.major=sprintf(
-        '<a href="%s">%s</a>',
-        data.list$programs[new.name, href, on="degree"],
-        new.name),
+      new.major=majorURL(new.name),
       classes=sprintf(
         '<a href="pairs/%s/%d.png">%d</a>',
         sapply(new.name, function(one.name){
@@ -129,26 +138,32 @@ all.majors.html <- print(
   type="html",
   sanitize.text.function=identity,
   file="/dev/null")
-header.html.tmp <- readLines("figure-common-header.html")
+common.table.header <- readLines("figure-common-table-header.html")
 ex.major <- "Computer Science"
 ex.year <- 2
 CS2 <- all.majors.years.list[[paste(ex.major, ex.year)]]
 major.text <- CS2[1, sprintf('For example, say your current/previous major is %s (row %d), and you have completed %d years of classes (year %d column).', ex.major, which(names(degree.list)==ex.major), ex.year, ex.year)]
 first <- CS2[1, sprintf('Then you can see that there are %d classes that you have already completed which are also requirements which could be used if you wanted to switch to %s.', n.common, new.name)]
 second <- CS2[2, sprintf('%s would also be a reasonable choice (%d classes in common).', new.name, n.common)]
+cat(
+  common.table.header,
+  "<p>", major.text, first, second, "</p>",
+  all.majors.html,
+  file=file.path("figure-common", "table.html"))
+
+## Simple index page.
+index.template <- readLines("figure-common-index-template.html")
 major.lis <- paste(
   sprintf(
     '<li><a href="%s.html">%s</a></li>',
     gsub(" ", "_", names(degree.list)),
     names(degree.list)),
   collapse="\n")
-header.html <- sprintf(
-  paste(header.html.tmp, collapse="\n"),
-  major.lis,
-  paste(major.text, first, second))
-cat(header.html, all.majors.html, file=file.path("figure-common", "index.html"))
+index <- sprintf(paste(index.template, collapse="\n"), major.lis)
+cat(index, file=file.path("figure-common", "index.html"))
 
 ## new major-specific pages.
+major.template <- readLines("figure-common-major-template.html")
 for(previous.major in names(degree.list)){
   getMajor <- function(DT){
     out <- DT[
@@ -167,7 +182,7 @@ for(previous.major in names(degree.list)){
       new.name==other.major][order(course.year, course)]
     course.html <- other.courses[
       year.out[,.(year)],
-      .(html=if(.N==0)"" else paste(paste("<br />", course), collapse="\n")),
+      .(html=if(.N==0)"" else paste(courseURL(course), collapse="<br />")),
       by=.EACHI,
       on=.(course.year=year)][["html"]]
     maybe.spaces <- make.pair(c(other.major, previous.major))
@@ -179,7 +194,7 @@ for(previous.major in names(degree.list)){
     img.html <- sprintf(
       '<a href="%s"><img src="%s" width="100"></a>',
       png.path, png.path)
-    year.out[[other.major]] <- paste0(img.html, course.html)
+    year.out[[majorURL(other.major)]] <- course.html
   }
   xt <- xtable::xtable(year.out)
   old.align <- xtable::align(xt)
@@ -192,7 +207,9 @@ for(previous.major in names(degree.list)){
     file="/dev/null")
   major.under <- gsub(" ", "_", previous.major)
   major.under.html <- paste0(major.under, ".html")
+  major.template.filled <- gsub("MAJOR", majorURL(previous.major), major.template)
   cat(
+    major.template.filled,
     gsub("<td", '<td valign="top"', major.html), 
     file=file.path("figure-common", major.under.html))
 }

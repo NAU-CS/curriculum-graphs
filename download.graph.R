@@ -1,6 +1,7 @@
 library(data.table)
 catalogYear <- 2021
 today.dir <- file.path("bs", format(Sys.time(), "%Y-%m-%d"))
+today.dir <- file.path("bs", "2020-11-05")
 siccs.html <- file.path(today.dir, "siccs.html")
 if(!file.exists(siccs.html)){
   dir.create(today.dir, showWarnings = FALSE, recursive = TRUE)
@@ -45,9 +46,10 @@ for(bs.i in 1:nrow(bs.dt)){
       "nau-catalog ",
       plan='[^"]+'))
   }
+  plan <- plan.dt[1, plan]
   u <- paste0(
     "https://catalog.nau.edu/Catalog/details?plan=",
-    plan.dt[1, plan])
+    plan)
   if(!file.exists(details.html)){
     download.file(u, details.html)
   }
@@ -72,7 +74,7 @@ for(bs.i in 1:nrow(bs.dt)){
   with(match.list, all[excluding, exclude := TRUE, on=names(all)])
   match.list$all[grepl("L$", catNbr), exclude := TRUE]
   program.dt.list[[bs.i]] <- data.table(
-    degree, href=u)
+    degree, plan)
   degree.courses.list[[bs.i]] <- match.list$all[is.na(exclude), data.table(
     degree, subject, catNbr)]
 }
@@ -92,6 +94,7 @@ all.courses <- unique(degree.courses[, .(subject, catNbr)])
 req.courses.list <- list()
 remove.courses.list <- list()
 options(warn=2)
+course.urls.list <- list()
 while(nrow({
   todo.courses <- all.courses[, data.table(
     subject, catNbr, name=paste(subject, catNbr)
@@ -104,34 +107,36 @@ while(nrow({
     course.dir <- course.row[, file.path(
       "years", catalogYear, subject, catNbr)]
     dir.create(course.dir, showWarnings = FALSE, recursive = TRUE)
+    ## If local results.html cache file does not exist then download it.
+    results.html <- file.path(course.dir, "results.html")
+    if(!file.exists(results.html)){
+      u <- course.row[, paste0(
+        Courses.prefix, "results?subject=",
+        subject, "&catNbr=", catNbr)]
+      download.file(u, results.html)
+    }
+    f <- function(name){
+      nc::field(name, '="', '.*?')
+    }
+    results.dt <- nc::capture_all_str(
+      results.html,
+      '<td><abbr ',
+      f('title'),
+      '" ><a ',
+      f('href'),
+      '"><strong>',
+      subject.catNbr.pattern,
+      '<')
+    match.href <- results.dt[course.row, href, on=.(subject, catNbr)]
+    u <- paste0(Courses.prefix, match.href)
+    ## If local match.html cache file does nto exist then download it.
     match.html <- file.path(course.dir, "match.html")
     if(!file.exists(match.html)){
-      results.html <- file.path(course.dir, "results.html")
-      if(!file.exists(results.html)){
-        u <- course.row[, paste0(
-          Courses.prefix, "results?subject=",
-          subject, "&catNbr=", catNbr)]
-        download.file(u, results.html)
-      }
-      f <- function(name){
-        nc::field(name, '="', '.*?')
-      }
-      results.dt <- nc::capture_all_str(
-        results.html,
-        '<td><abbr ',
-        f('title'),
-        '" ><a ',
-        f('href'),
-        '"><strong>',
-        subject.catNbr.pattern,
-        '<')
-      match.href <- results.dt[course.row, href, on=.(subject, catNbr)]
       if(is.na(match.href)){
         ## Write empty file to signify that this course was not found,
-        ## e.g., MTHPLACE 65 is a pre-req but not a course.x
+        ## e.g., MTHPLACE 65 is a pre-req but not a course.
         cat("", file=match.html)
       }else{
-        u <- paste0(Courses.prefix, match.href)
         download.file(u, match.html)
       }
     }
@@ -141,6 +146,13 @@ while(nrow({
       remove.courses.list[[ course.row$name ]] <- NA
       character()
     }else{
+      ## First store courseId URL.
+      courseId <- nc::capture_first_vec(
+        match.href,
+        nc::field("courseId", "=", "[0-9]+"))
+      course.urls.list[[course.row$name]] <- data.table(
+        course.row, courseId)
+      ## Then parse match.html to get pre-reqs.
       course.string <- paste(course.lines, collapse="\n")
       no.comments <- gsub("<!--(?:.*\n)*?.*?-->", "", course.string)
       course.info <- nc::capture_all_str(
@@ -164,10 +176,12 @@ while(nrow({
   all.courses <- unique(do.call(rbind, new.courses.list))
 }
 
+course.urls <- do.call(rbind, course.urls.list)
 req.courses <- do.call(rbind, req.courses.list)
 names(remove.courses.list)
 
 graph.list <- list(
+  courseIds=course.urls,
   programs=program.dt,
   degree_courses=unique(degree.courses[, .(
     degree, course=paste(subject, catNbr))]),
