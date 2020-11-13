@@ -15,7 +15,7 @@ getDT <- function(x){
     number="[0-9]+", as.integer,
     suffix=".*")
   dt[, year := floor(number/100)]
-  dt
+  dt[]
 }
 majorURL <- function(major){
   ahref(major, paste0("https://catalog.nau.edu/Catalog/details?plan=", data.list$programs[major, plan]))
@@ -41,12 +41,23 @@ for(pair.i in 1:nrow(pairs.dt)){
   pair.name <- make.pair(pair.unsort)
   cat(sprintf("%4d / %4d pairs %s\n", pair.i, nrow(pairs.dt), pair.name))
   f <- function(x)unique(degree.list[[x]]$course)
-  common <- pair.row[, intersect(f(i), f(j)) ]
+  common.all.years <- pair.row[, intersect(f(i), f(j)) ]
+  common <- if(length(common.all.years)==0){
+    character()
+  }else{
+    common.dt <- data.table(
+      course=common.all.years,
+      getDT(common.all.years)
+    )[year <= pair.row$year]
+    common.dt[["course"]]
+  }
   n.common <- length(common)
   some.colors <- c(#dput(RColorBrewer::brewer.pal(Inf, "Set3"))
     "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", 
     "#B3DE69", "#FCCDE5", "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
-  common.colors <- structure(rep(some.colors, l=length(common)), names=common)
+  common.colors <- structure(
+    rep(some.colors, l=n.common),
+    names=common)
   pair.dir <- file.path(
     "figure-common", "pairs", gsub(" ", "_", pair.name))
   dir.create(pair.dir, showWarnings = FALSE, recursive = TRUE)
@@ -101,12 +112,15 @@ for(pair.i in 1:nrow(pairs.dt)){
 common.dt <- do.call(rbind, common.dt.list)
 classes.dt <- do.call(rbind, classes.dt.list)
 
+## complicated table of majors on columns and years on rows.
 all.majors.dt.list <- list()
 all.majors.years.list <- list()
 for(previous.major in names(degree.list)){
-  previous.dt <- common.dt[
-    i.name==previous.major | j.name==previous.major][order(year, -n.common)]
-  previous.dt[, new.name := ifelse(i.name==previous.major, j.name, i.name)]
+  previous.unsort <- common.dt[
+    i.name==previous.major | j.name==previous.major
+  ]
+  previous.unsort[, new.name := ifelse(i.name==previous.major, j.name, i.name)]
+  previous.dt <- previous.unsort[order(year, -n.common, new.name)]
   major.dt <- data.table(previous.major)
   for(y in year.vec){
     year.dt <- previous.dt[J(y), on="year"]
